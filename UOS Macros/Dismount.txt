@@ -1,0 +1,44 @@
+// Author: Di
+// Description: automatically switch bows and try to dismount enemy
+if mana >= 7
+  if mounted 'enemy'
+    dress 'Dismount Bow'
+    while dressing
+    endwhile
+    if @inrange 'enemy' 6
+      if mounted
+        useobject 'self'
+      endif
+      while mounted
+      endwhile
+      if @inrange 'enemy' 8 and mounted 'enemy'
+        setability 'secondary' 'on'
+        attack 'enemy'
+        pause 600
+        if not mounted 'enemy'
+          dress 'Bow'
+          while dressing
+          endwhile
+        endif
+      endif
+    else
+      headmsg '* Out of range *' 25
+    endif
+  else
+    headmsg '* Already dismounted *' 25
+  endif
+  if not mounted
+    if poisoned 'mount'
+      if skill 'chivalry' >= 50
+        cast 'cleanse by fire' 'mount'
+      elseif skill 'magery' >= 50
+        cast 'cure' 'mount'
+      endif
+      while waitingfortarget
+      endwhile
+    endif
+    useobject 'mount'
+  endif
+else
+  headmsg '* No mana *' 25
+endif
