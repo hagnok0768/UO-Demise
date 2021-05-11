@@ -1,0 +1,189 @@
+//Esse macro faz a quantidade de potions que você determinar, //basta editar na lista "quantities".
+//Coloque os reagentes, empty bottles, tinker tool e iron
+//ingots na bag de restock
+//se preferir tenha vários mortar
+//and pestle na própria backpack do personagem.
+//Marque a opção "Loop" e selecione o container de "restock".
+// Author: Madu
+// Description: craft potions, configurable amount for each potion type
+if @list 'quantities' == 0
+  removelist 'categories'
+  removelist 'buttons'
+  removelist 'resource'
+  removelist 'quantities'
+  removelist 'types'
+  removelist 'names'
+  if not @findalias 'error'
+    sysmsg 'Potions crafted successfully!' 88
+  else
+    sysmsg 'Finished without crafting all potions!' 25
+    @unsetalias 'error'
+  endif
+  stop
+endif
+if not @findobject 'restock'
+  promptalias 'restock'
+  waitforcontents 'restock' 15000
+endif
+if not listexists 'categories'
+  createlist 'categories'
+  pushlist 'categories' 1 // refresh
+  pushlist 'categories' 22 // heal
+  pushlist 'categories' 43 // cure
+  pushlist 'categories' 36 // poison
+  pushlist 'categories' 29 // strenght
+  pushlist 'categories' 8 // agility
+  pushlist 'categories' 50 // explosion
+endif
+if not listexists 'buttons'
+  createlist 'buttons'
+  pushlist 'buttons' 9 // refresh
+  pushlist 'buttons' 16 // heal
+  pushlist 'buttons' 16 // cure
+  pushlist 'buttons' 9 // 9: poison, 16: greater poison, 23: deadly poison
+  pushlist 'buttons' 9 // strenght
+  pushlist 'buttons' 9 // agility
+  pushlist 'buttons' 16 // explosion
+endif
+if not listexists 'quantities'
+  createlist 'quantities'
+  pushlist 'quantities' 1000 // refresh
+  pushlist 'quantities' 1000 // heal
+  pushlist 'quantities' 1000 // cure
+  pushlist 'quantities' 0 // poison
+  pushlist 'quantities' 1000 // strenght
+  pushlist 'quantities' 1000 // agility
+  pushlist 'quantities' 10000 // explosion
+endif
+if not listexists 'types'
+  createlist 'types'
+  pushlist 'types' 0xf0b // refresh
+  pushlist 'types' 0xf0c // heal
+  pushlist 'types' 0xf07 // cure
+  pushlist 'types' 0xf0a // cure
+  pushlist 'types' 0xf09 // strenght
+  pushlist 'types' 0xf08 // agility
+  pushlist 'types' 0xf0d // explosion
+endif
+if not listexists 'resource'
+  createlist 'resource'
+  pushlist 'resource' 0xf7a // refresh (black pearl)
+  pushlist 'resource' 0xf85 // heal (ginseng)
+  pushlist 'resource' 0xf84 // cure (garlic)
+  pushlist 'resource' 0xf88 // poison (nightshade)
+  pushlist 'resource' 0xf86 // strenght (mandrake root)
+  pushlist 'resource' 0xf7b // agility (blood moss)
+  pushlist 'resource' 0xf8c // explosion (sulfurous ash)
+endif
+if not listexists 'names'
+  createlist 'names'
+  pushlist 'names' 'greater refreshment'
+  pushlist 'names' 'greater heal'
+  pushlist 'names' 'greater cure'
+  pushlist 'names' 'deadly poison'
+  pushlist 'names' 'greater strength'
+  pushlist 'names' 'greater agility'
+  pushlist 'names' 'greater explosion'
+endif
+// Main
+waitforcontents 'backpack' 15000
+while @counttype 'types[0]' 'any' 'restock' < 'quantities[0]'
+  // Restock
+  if @counttype 'resource[0]' 'any' 'backpack' < 8
+    if @counttype 'resource[0]' 'any' 'restock' > 100
+      @movetype 'resource[0]' 'restock' 'backpack' 0 0 0 'any' 100
+      pause 1000
+    else
+      sysmsg 'Out of reagents for:' 25
+      sysmsg 'names[0]' 25
+      @setalias 'error' 'self'
+      break
+    endif
+  endif
+  if @counttype 0xf0e 'any' 'backpack' < 1
+    if @counttype 0xf0e 'any' 'restock' > 100
+      @movetype 0xf0e 'restock' 'backpack' 0 0 0 'any' 100
+      pause 1000
+    else
+      sysmsg 'Out of empty bottles!' 25
+      stop
+    endif
+  endif
+  // Unload existing potion unit
+  if @usetype! 0xe9b 0 'backpack'
+    waitforgump 0x38920abd 2500
+    // Swap category once
+    if not @ingump 0x38920abd 'names[0]'
+      replygump 0x38920abd 'categories[0]'
+      waitforgump 0x38920abd 2500
+    endif
+    // Craft potion
+    replygump 0x38920abd 'buttons[0]'
+    pause 500
+    @movetype 'types[0]' 'backpack' 'restock' 0 0 0 'any' 1
+    waitforgump 0x38920abd 2500
+  elseif not @findtype 0xe9b 0 'backpack'
+    // Check tools
+    if @movetype 0xe9b 'restock' 'backpack'
+      pause 1000
+    elseif skill 'tinkering' >= 50
+      // Get ingots
+      if not @findtype 0x1bf2 0 'backpack' 22
+        if @movetype 0x1bf2 'restock' 'backpack' 0 0 0 0 21
+          pause 1000
+        else
+          sysmsg 'Out of ingots!' 25
+          stop
+        endif
+      endif
+      // Craft tools
+      if not @findtype 0x1eb8 0 'backpack'
+        if @movetype 0x1eb8 'restock' 'backpack'
+          pause 1000
+          if @usetype! 0x1eb8
+            waitforgump 0x38920abd 2500
+            replygump 0x38920abd 8
+            waitforgump 0x38920abd 2500
+            replygump 0x38920abd 23
+            waitforgump 0x38920abd 2500
+            replygump 0x38920abd 0
+            pause 1000
+          endif
+          if @movetype 0x1eb8 'backpack' 'restock'
+            pause 1000
+          endif
+        else
+          sysmsg 'Out of tinker tools!' 25
+          stop
+        endif
+      endif
+      for 7
+        if @usetype! 0x1eb8
+          waitforgump 0x38920abd 2500
+          if not @ingump 0x38920abd 'mortar and pestle'
+            replygump 0x38920abd 8
+            waitforgump 0x38920abd 2500
+          endif
+          replygump 0x38920abd 9
+          waitforgump 0x38920abd 2500
+          pause 1000
+        endif
+      endfor
+      @replygump 0x38920abd 0
+    else
+      sysmsg 'Out of mortar and pestle!' 25
+      stop
+    endif
+  endif
+endwhile
+// Unload resource
+if @movetype 'resource[0]' 'backpack' 'restock' 0 0 0 'any' 'any'
+  pause 1000
+endif
+// Remove obsolete data
+poplist 'categories' 'front'
+poplist 'buttons' 'front'
+poplist 'resource' 'front'
+poplist 'quantities' 'front'
+poplist 'types' 'front'
+poplist 'names' 'front'

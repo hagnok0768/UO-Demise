@@ -1,0 +1,18 @@
+// Description: accept resurrection, get corpse and mount
+@replygump 2957810225 1
+clearignorelist
+while @findtype '0x2006' 'any' 'ground' 2
+  @useobject! 'found'
+  ignoreobject 'found'
+  pause 550
+endwhile
+if not dead and not mounted
+  if poisoned 'mount' and not inregion 'guard'
+    while mana < 4
+    endwhile
+    cast 'cure' 'mount'
+    while waitingfortarget
+    endwhile
+  endif
+  useobject 'mount'
+endif
